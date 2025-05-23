@@ -1,0 +1,91 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+{% load static %}
+
+{% block title %}Modifier le profil{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="text-center">Modifier votre profil</h2>
+                </div>
+                
+                <div class="card-body">
+                    <form method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        
+                        <!-- Avatar -->
+                        <div class="text-center mb-4">
+                            <div class="mb-3">
+                                {% if form.instance.avatar %}
+                                    <img src="{{ form.instance.avatar.url }}" 
+                                         alt="Avatar" 
+                                         class="rounded-circle"
+                                         style="width: 150px; height: 150px; object-fit: cover;">
+                                {% else %}
+                                    <img src="{% static 'images/default-avatar.png' %}" 
+                                         alt="Avatar par défaut" 
+                                         class="rounded-circle"
+                                         style="width: 150px; height: 150px; object-fit: cover;">
+                                {% endif %}
+                            </div>
+                            {{ form.avatar|as_crispy_field }}
+                        </div>
+
+                        <!-- Informations personnelles -->
+                        <div class="mb-4">
+                            <h4>Informations personnelles</h4>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    {{ form.first_name|as_crispy_field }}
+                                </div>
+                                <div class="col-md-6">
+                                    {{ form.last_name|as_crispy_field }}
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    {{ form.email|as_crispy_field }}
+                                </div>
+                                <div class="col-md-6">
+                                    {{ form.display_name|as_crispy_field }}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Contact -->
+                        <div class="mb-4">
+                            <h4>Contact</h4>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    {{ form.location|as_crispy_field }}
+                                </div>
+                                <div class="col-md-6">
+                                    {{ form.website|as_crispy_field }}
+                                </div>
+                            </div>
+                            {{ form.social_media|as_crispy_field }}
+                        </div>
+
+                        <!-- À propos -->
+                        <div class="mb-4">
+                            <h4>À propos</h4>
+                            {{ form.bio|as_crispy_field }}
+                            {{ form.specialties|as_crispy_field }}
+                        </div>
+
+                        <!-- Boutons -->
+                        <div class="text-center">
+                            <button type="submit" class="btn btn-primary">Enregistrer</button>
+                            <a href="{% url 'recipes:profile' %}" class="btn btn-secondary">Annuler</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

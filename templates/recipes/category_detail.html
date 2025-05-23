@@ -1,0 +1,72 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ category.name }}{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row mb-4">
+        <div class="col">
+            <h1 class="text-center">{{ category.name }}</h1>
+            {% if category.description %}
+                <p class="text-center lead">{{ category.description }}</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="row">
+        {% for recipe in recipes %}
+            <div class="col-md-4 mb-4">
+                <div class="card h-100">
+                    {% if recipe.image %}
+                        <img src="{{ recipe.image.url }}" class="card-img-top" alt="{{ recipe.title }}">
+                    {% else %}
+                        <img src="{% static 'images/default-recipe.jpg' %}" class="card-img-top" alt="Image par défaut">
+                    {% endif %}
+                    <div class="card-body">
+                        <h5 class="card-title">{{ recipe.title }}</h5>
+                        <p class="card-text">{{ recipe.description|truncatewords:20 }}</p>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <small class="text-muted">{{ recipe.preparation_time }} min</small>
+                            <span class="badge bg-{{ recipe.difficulty|lower }}">
+                                {{ recipe.get_difficulty_display }}
+                            </span>
+                        </div>
+                    </div>
+                    <div class="card-footer">
+                        <a href="{% url 'recipes:recipe_detail' pk=recipe.pk %}" class="btn btn-primary btn-sm">Voir la recette</a>
+                    </div>
+                </div>
+            </div>
+        {% empty %}
+            <div class="col">
+                <p class="text-center">Aucune recette dans cette catégorie pour le moment.</p>
+            </div>
+        {% endfor %}
+    </div>
+
+    {% if recipes.has_other_pages %}
+        <nav aria-label="Navigation des pages" class="mt-4">
+            <ul class="pagination justify-content-center">
+                {% if recipes.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ recipes.previous_page_number }}">Précédent</a>
+                    </li>
+                {% endif %}
+
+                {% for num in recipes.paginator.page_range %}
+                    <li class="page-item {% if recipes.number == num %}active{% endif %}">
+                        <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                    </li>
+                {% endfor %}
+
+                {% if recipes.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ recipes.next_page_number }}">Suivant</a>
+                    </li>
+                {% endif %}
+            </ul>
+        </nav>
+    {% endif %}
+</div>
+{% endblock %} 

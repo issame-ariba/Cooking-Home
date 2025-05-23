@@ -1,0 +1,115 @@
+{% extends "base.html" %}
+{% load crispy_forms_tags %}
+{% load static %}
+
+{% block title %}Inscription{% endblock %}
+
+{% block content %}
+<div class="register-page" style="background: linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), url('{% static "images/hero-banner.jpg" %}') no-repeat center center fixed; background-size: cover; min-height: calc(100vh - 200px); display: flex; align-items: center;">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-8 col-lg-6">
+                <div class="card shadow-lg border-0">
+                    <div class="card-header bg-white border-0 text-center py-4">
+                        <h3 class="mb-0 fw-bold text-primary">Créez votre compte</h3>
+                        <p class="text-muted small mb-0">Rejoignez notre communauté de passionnés de cuisine</p>
+                    </div>
+                    <div class="card-body p-4">
+                        <form method="post" class="needs-validation" novalidate enctype="multipart/form-data">
+                            {% csrf_token %}
+                            
+                            <h5 class="mb-3">Informations de compte</h5>
+                            {{ user_form|crispy }}
+                            
+                            <h5 class="mt-4 mb-3">Profil</h5>
+                            {{ profile_form|crispy }}
+                            
+                            <div class="d-grid gap-2 mt-4">
+                                <button type="submit" class="btn btn-primary btn-lg">
+                                    <i class="fas fa-user-plus me-2"></i>S'inscrire
+                                </button>
+                            </div>
+                        </form>
+                        <hr class="my-4">
+                        <div class="text-center">
+                            <p class="mb-0">Vous avez déjà un compte ?</p>
+                            <a href="{% url 'login' %}" class="btn btn-outline-primary mt-2">
+                                <i class="fas fa-sign-in-alt me-2"></i>Se connecter
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.register-page {
+    background-attachment: fixed;
+    margin: -2rem 0;  /* Compensate for main padding */
+}
+
+.card {
+    border-radius: 15px;
+    backdrop-filter: blur(10px);
+    background-color: rgba(255, 255, 255, 0.95);
+}
+
+.card-header {
+    border-radius: 15px 15px 0 0 !important;
+}
+
+.form-control {
+    border-radius: 10px;
+    padding: 12px;
+    border: 1px solid #e0e0e0;
+    transition: all 0.3s ease;
+}
+
+.form-control:focus {
+    box-shadow: 0 0 0 0.2rem rgba(var(--primary-color-rgb), 0.25);
+    border-color: var(--primary-color);
+}
+
+.btn {
+    border-radius: 25px;
+    padding: 12px 20px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    transition: all 0.3s ease;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, var(--primary-color), #ff8e8e);
+    border: none;
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+}
+
+.btn-outline-primary {
+    border-radius: 20px;
+    padding: 8px 20px;
+}
+
+.invalid-feedback {
+    font-size: 0.875rem;
+}
+
+@media (max-width: 768px) {
+    .card {
+        margin: 1rem;
+    }
+    
+    .register-page {
+        min-height: calc(100vh - 150px);
+    }
+}
+</style>
+{% endblock %} 

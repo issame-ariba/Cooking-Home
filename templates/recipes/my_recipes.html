@@ -1,0 +1,289 @@
+{% extends "base.html" %}
+{% load static %}
+{% load crispy_forms_tags %}
+
+{% block title %}Mes recettes{% endblock %}
+
+{% block extra_css %}
+<style>
+.recipes-header {
+    background: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.7)), url('{% static "images/recipes-bg.jpg" %}');
+    background-size: cover;
+    background-position: center;
+    color: white;
+    padding: 4rem 0;
+    margin-bottom: 3rem;
+}
+
+.recipes-header h1 {
+    font-size: 3rem;
+    font-weight: bold;
+    margin-bottom: 1rem;
+}
+
+.recipes-header p {
+    font-size: 1.2rem;
+    opacity: 0.9;
+}
+
+.recipe-card {
+    background: white;
+    border-radius: 1rem;
+    box-shadow: 0 0 20px rgba(0,0,0,0.1);
+    transition: all 0.3s ease;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.recipe-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 5px 25px rgba(0,0,0,0.15);
+}
+
+.recipe-image {
+    position: relative;
+    height: 200px;
+    overflow: hidden;
+    border-radius: 1rem 1rem 0 0;
+}
+
+.recipe-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.3s ease;
+}
+
+.recipe-card:hover .recipe-image img {
+    transform: scale(1.1);
+}
+
+.recipe-status {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    padding: 0.5rem 1rem;
+    border-radius: 2rem;
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+.status-draft {
+    background-color: #ffc107;
+    color: #000;
+}
+
+.status-published {
+    background-color: #28a745;
+    color: white;
+}
+
+.recipe-content {
+    padding: 1.5rem;
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.recipe-title {
+    font-size: 1.4rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+    color: #2c3e50;
+}
+
+.recipe-meta {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1rem;
+    font-size: 0.9rem;
+    color: #6c757d;
+}
+
+.recipe-meta-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.recipe-meta-item i {
+    color: var(--bs-primary);
+}
+
+.recipe-description {
+    color: #6c757d;
+    margin-bottom: 1.5rem;
+    flex-grow: 1;
+}
+
+.recipe-actions {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: auto;
+}
+
+.recipe-actions .btn {
+    flex: 1;
+    padding: 0.5rem;
+    font-size: 0.9rem;
+}
+
+.recipe-actions .btn i {
+    margin-right: 0.5rem;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 3rem;
+    background: white;
+    border-radius: 1rem;
+    box-shadow: 0 0 20px rgba(0,0,0,0.1);
+}
+
+.empty-state i {
+    font-size: 4rem;
+    color: var(--bs-primary);
+    margin-bottom: 1rem;
+}
+
+.empty-state h3 {
+    color: #2c3e50;
+    margin-bottom: 1rem;
+}
+
+.empty-state p {
+    color: #6c757d;
+    margin-bottom: 2rem;
+}
+
+@media (max-width: 768px) {
+    .recipes-header {
+        padding: 2rem 0;
+    }
+    
+    .recipes-header h1 {
+        font-size: 2rem;
+    }
+    
+    .recipe-meta {
+        flex-wrap: wrap;
+    }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="recipes-header">
+    <div class="container">
+        <h1>Mes recettes</h1>
+        <p>Gérez et partagez vos créations culinaires</p>
+    </div>
+</div>
+
+<div class="container">
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <a href="{% url 'recipes:recipe_create' %}" class="btn btn-primary btn-lg">
+                <i class="fas fa-plus"></i> Créer une nouvelle recette
+            </a>
+        </div>
+        <div class="col-md-6">
+            <form method="get" class="d-flex">
+                <input type="text" name="search" class="form-control me-2" placeholder="Rechercher dans mes recettes...">
+                <button type="submit" class="btn btn-outline-primary">
+                    <i class="fas fa-search"></i>
+                </button>
+            </form>
+        </div>
+    </div>
+
+    {% if recipes %}
+    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+        {% for recipe in recipes %}
+        <div class="col">
+            <div class="recipe-card">
+                <div class="recipe-image">
+                    {% if recipe.images.exists %}
+                    <img src="{{ recipe.images.first.image.url }}" alt="{{ recipe.title }}">
+                    {% else %}
+                    <img src="{% static 'images/default-recipe.jpg' %}" alt="Image par défaut">
+                    {% endif %}
+                    <div class="recipe-status {% if recipe.is_published %}status-published{% else %}status-draft{% endif %}">
+                        {% if recipe.is_published %}Publié{% else %}Brouillon{% endif %}
+                    </div>
+                </div>
+                <div class="recipe-content">
+                    <h3 class="recipe-title">{{ recipe.title }}</h3>
+                    <div class="recipe-meta">
+                        <div class="recipe-meta-item">
+                            <i class="fas fa-clock"></i>
+                            <span>{{ recipe.preparation_time }} min</span>
+                        </div>
+                        <div class="recipe-meta-item">
+                            <i class="fas fa-signal"></i>
+                            <span>{{ recipe.get_difficulty_display }}</span>
+                        </div>
+                        <div class="recipe-meta-item">
+                            <i class="fas fa-calendar"></i>
+                            <span>{{ recipe.created_at|date:"d/m/Y" }}</span>
+                        </div>
+                    </div>
+                    <p class="recipe-description">{{ recipe.description|truncatechars:100 }}</p>
+                    <div class="recipe-actions">
+                        <a href="{% url 'recipes:recipe_detail' recipe.id %}" class="btn btn-outline-primary">
+                            <i class="fas fa-eye"></i> Voir
+                        </a>
+                        <a href="{% url 'recipes:recipe_edit' recipe.id %}" class="btn btn-outline-secondary">
+                            <i class="fas fa-edit"></i> Modifier
+                        </a>
+                        <a href="{% url 'recipes:recipe_delete' recipe.id %}" class="btn btn-outline-danger" onclick="return confirm('Êtes-vous sûr de vouloir supprimer cette recette ?')">
+                            <i class="fas fa-trash"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    {% if is_paginated %}
+    <nav class="mt-5">
+        <ul class="pagination justify-content-center">
+            {% if page_obj.has_previous %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.previous_page_number }}">
+                    <i class="fas fa-chevron-left"></i>
+                </a>
+            </li>
+            {% endif %}
+
+            {% for num in page_obj.paginator.page_range %}
+            <li class="page-item {% if page_obj.number == num %}active{% endif %}">
+                <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+            </li>
+            {% endfor %}
+
+            {% if page_obj.has_next %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.next_page_number }}">
+                    <i class="fas fa-chevron-right"></i>
+                </a>
+            </li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+
+    {% else %}
+    <div class="empty-state">
+        <i class="fas fa-utensils"></i>
+        <h3>Vous n'avez pas encore de recettes</h3>
+        <p>Commencez à partager vos créations culinaires avec la communauté</p>
+        <a href="{% url 'recipes:recipe_create' %}" class="btn btn-primary btn-lg">
+            <i class="fas fa-plus"></i> Créer ma première recette
+        </a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %} 

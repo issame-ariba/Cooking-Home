@@ -1,0 +1,499 @@
+{% extends "base.html" %}
+{% load crispy_forms_tags %}
+{% load static %}
+
+{% block title %}
+    {% if form.instance.pk %}
+        Modifier {{ form.instance.title }}
+    {% else %}
+        Créer une nouvelle recette
+    {% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-body">
+                <h2 class="card-title mb-4">
+                    {% if form.instance.pk %}
+                        Modifier la recette
+                    {% else %}
+                        Créer une nouvelle recette
+                    {% endif %}
+                </h2>
+                
+                <form method="post" enctype="multipart/form-data" novalidate>
+                    {% csrf_token %}
+                    
+                    <div class="row">
+                        <div class="col-md-8">
+                            {{ form.title|as_crispy_field }}
+                        </div>
+                        <div class="col-md-4">
+                            {{ form.category|as_crispy_field }}
+                        </div>
+                    </div>
+                    
+                    <!-- Section pour l'image de fond -->
+                    <div class="card mb-4">
+                        <div class="card-header bg-light">
+                            <h5 class="mb-0">
+                                <i class="fas fa-image me-2"></i>Image de fond pour le titre
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-12">
+                                    <div class="cover-upload-container">
+                                        <div class="cover-upload-area" id="cover-drop-zone">
+                                            <div class="upload-icon">
+                                                <i class="fas fa-image fa-3x"></i>
+                                            </div>
+                                            <p class="upload-text">Ajoutez une image de fond pour votre recette</p>
+                                            <p class="upload-subtext">Cette image sera affichée en arrière-plan du titre</p>
+                                            {{ form.cover_image|as_crispy_field }}
+                                            <p class="upload-hint">Formats acceptés : JPG, PNG (max 5MB)</p>
+                                        </div>
+                                        <div id="cover-preview" class="mt-3">
+                                            {% if form.instance.cover_image %}
+                                                <div class="position-relative cover-preview-item">
+                                                    <img src="{{ form.instance.cover_image.url }}" 
+                                                         alt="Image de fond" 
+                                                         class="img-fluid rounded"
+                                                         style="max-height: 200px; width: auto;">
+                                                    <button type="button" 
+                                                            class="btn btn-sm btn-danger position-absolute top-0 end-0"
+                                                            data-image-id="{{ form.instance.cover_image.id }}">
+                                                        <i class="fas fa-times"></i>
+                                                    </button>
+                                                </div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    {{ form.description|as_crispy_field }}
+                    
+                    <!-- Section pour le catalogue de photos -->
+                    <div class="card mb-4">
+                        <div class="card-header bg-light">
+                            <h5 class="mb-0">
+                                <i class="fas fa-images me-2"></i>Catalogue de photos de la recette
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-12">
+                                    <div class="catalog-upload-container">
+                                        <div class="catalog-upload-area" id="catalog-drop-zone">
+                                            <div class="upload-icon">
+                                                <i class="fas fa-camera fa-3x"></i>
+                                            </div>
+                                            <p class="upload-text">Ajoutez des photos pour votre catalogue</p>
+                                            <p class="upload-subtext">Glissez-déposez vos images ici ou cliquez pour sélectionner</p>
+                                            {{ form.images|as_crispy_field }}
+                                            <p class="upload-hint">Formats acceptés : JPG, PNG, GIF (max 5MB par image)</p>
+                                        </div>
+                                        <div id="catalog-preview" class="mt-3 d-flex flex-wrap gap-2">
+                                            {% if form.instance.pk and form.instance.images.exists %}
+                                                {% for img in form.instance.images.all %}
+                                                    <div class="position-relative catalog-preview-item">
+                                                        <img src="{{ img.image.url }}" 
+                                                             alt="Photo catalogue" 
+                                                             class="img-thumbnail" 
+                                                             style="width: 150px; height: 150px; object-fit: cover;">
+                                                        <button type="button" 
+                                                                class="btn btn-sm btn-danger position-absolute top-0 end-0"
+                                                                data-image-id="{{ img.id }}">
+                                                            <i class="fas fa-times"></i>
+                                                        </button>
+                                                    </div>
+                                                {% endfor %}
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-4">
+                            {{ form.preparation_time|as_crispy_field }}
+                        </div>
+                        <div class="col-md-4">
+                            {{ form.cooking_time|as_crispy_field }}
+                        </div>
+                        <div class="col-md-4">
+                            {{ form.servings|as_crispy_field }}
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-12">
+                            {{ form.difficulty|as_crispy_field }}
+                        </div>
+                    </div>
+
+                    {{ form.ingredients|as_crispy_field }}
+                    {{ form.instructions|as_crispy_field }}
+                    {{ form.tags|as_crispy_field }}
+                    
+                    <div class="mt-4">
+                        <button type="submit" class="btn btn-primary">
+                            {% if form.instance.pk %}
+                                Mettre à jour
+                            {% else %}
+                                Créer
+                            {% endif %}
+                        </button>
+                        <a href="{% if form.instance.pk %}
+                                    {% url 'recipes:recipe_detail' pk=form.instance.pk %}
+                                {% else %}
+                                    {% url 'recipes:recipe_list' %}
+                                {% endif %}" 
+                           class="btn btn-secondary">
+                            Annuler
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.image-upload-container {
+    border: 2px dashed #ccc;
+    border-radius: 8px;
+    padding: 20px;
+    text-align: center;
+    background-color: #f8f9fa;
+    transition: all 0.3s ease;
+}
+
+.image-upload-container:hover {
+    border-color: #007bff;
+    background-color: #f1f8ff;
+}
+
+.image-upload-area {
+    cursor: pointer;
+}
+
+.upload-icon {
+    color: #6c757d;
+    margin-bottom: 10px;
+}
+
+.upload-text {
+    margin-bottom: 10px;
+    color: #495057;
+}
+
+.upload-hint {
+    font-size: 0.875rem;
+    color: #6c757d;
+    margin-top: 10px;
+}
+
+.image-preview-item {
+    position: relative;
+    margin: 5px;
+}
+
+.image-caption {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: rgba(0, 0, 0, 0.5);
+    color: white;
+    padding: 2px 5px;
+    font-size: 0.75rem;
+    text-align: center;
+}
+
+#id_images {
+    display: none;
+}
+
+.dragover {
+    border-color: #007bff;
+    background-color: #e7f1ff;
+}
+
+.catalog-upload-container {
+    border: 2px dashed #ccc;
+    border-radius: 8px;
+    padding: 20px;
+    text-align: center;
+    background-color: #f8f9fa;
+    transition: all 0.3s ease;
+    margin-bottom: 20px;
+}
+
+.catalog-upload-container:hover {
+    border-color: #28a745;
+    background-color: #f1fff1;
+}
+
+.catalog-upload-area {
+    cursor: pointer;
+    padding: 20px;
+}
+
+.upload-subtext {
+    color: #6c757d;
+    font-size: 0.9rem;
+    margin-bottom: 15px;
+}
+
+.catalog-preview-item {
+    margin: 5px;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.catalog-preview-item img {
+    transition: transform 0.3s ease;
+}
+
+.catalog-preview-item:hover img {
+    transform: scale(1.05);
+}
+
+#catalog-drop-zone.dragover {
+    border-color: #28a745;
+    background-color: #e7ffe7;
+}
+
+.cover-upload-container {
+    border: 2px dashed #ccc;
+    border-radius: 8px;
+    padding: 20px;
+    text-align: center;
+    background-color: #f8f9fa;
+    transition: all 0.3s ease;
+    margin-bottom: 20px;
+}
+
+.cover-upload-container:hover {
+    border-color: #007bff;
+    background-color: #f1f8ff;
+}
+
+.cover-upload-area {
+    cursor: pointer;
+    padding: 20px;
+}
+
+.cover-preview-item {
+    display: inline-block;
+    margin: 10px;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.cover-preview-item img {
+    transition: transform 0.3s ease;
+}
+
+.cover-preview-item:hover img {
+    transform: scale(1.05);
+}
+
+#cover-drop-zone.dragover {
+    border-color: #007bff;
+    background-color: #e7f1ff;
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    // Configuration pour le catalogue de photos
+    const dropZone = $('#catalog-drop-zone');
+    const preview = $('#catalog-preview');
+    const fileInput = $('#id_images');
+
+    // Fonction pour afficher les erreurs
+    function showError(message) {
+        alert(message);
+    }
+
+    // Gestion du drag & drop
+    dropZone.on('dragover', function(e) {
+        e.preventDefault();
+        $(this).addClass('dragover');
+    });
+
+    dropZone.on('dragleave', function(e) {
+        e.preventDefault();
+        $(this).removeClass('dragover');
+    });
+
+    dropZone.on('drop', function(e) {
+        e.preventDefault();
+        $(this).removeClass('dragover');
+        
+        const files = e.originalEvent.dataTransfer.files;
+        handleFiles(files);
+    });
+
+    // Gestion du clic sur la zone de dépôt
+    dropZone.on('click', function() {
+        fileInput.click();
+    });
+
+    // Gestion de la sélection de fichiers
+    fileInput.on('change', function() {
+        handleFiles(this.files);
+    });
+
+    // Fonction pour gérer les fichiers
+    function handleFiles(files) {
+        Array.from(files).forEach(file => {
+            if (!file.type.match('image.*')) {
+                showError('Veuillez sélectionner uniquement des images');
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const img = $('<img>')
+                    .attr('src', e.target.result)
+                    .addClass('img-thumbnail')
+                    .css({
+                        'width': '150px',
+                        'height': '150px',
+                        'object-fit': 'cover'
+                    });
+
+                const removeBtn = $('<button>')
+                    .addClass('btn btn-sm btn-danger position-absolute top-0 end-0')
+                    .html('<i class="fas fa-times"></i>')
+                    .on('click', function() {
+                        $(this).parent().remove();
+                    });
+
+                const previewItem = $('<div>')
+                    .addClass('position-relative catalog-preview-item')
+                    .append(img)
+                    .append(removeBtn);
+
+                preview.append(previewItem);
+            };
+            reader.readAsDataURL(file);
+        });
+    }
+
+    // Suppression d'image
+    preview.on('click', 'button', function() {
+        const imageId = $(this).data('image-id');
+        if (imageId) {
+            if (confirm('Êtes-vous sûr de vouloir supprimer cette image ?')) {
+                $.ajax({
+                    url: "{% url 'recipes:delete_recipe_image' 0 %}".replace('0', imageId),
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': '{{ csrf_token }}'
+                    },
+                    success: function(response) {
+                        if (response.success) {
+                            location.reload();
+                        } else {
+                            showError('Erreur lors de la suppression de l\'image');
+                        }
+                    },
+                    error: function(xhr) {
+                        if (xhr.status === 403) {
+                            showError('Vous n\'avez pas la permission de supprimer cette image');
+                        } else {
+                            showError('Erreur lors de la suppression de l\'image');
+                        }
+                    }
+                });
+            }
+        } else {
+            $(this).closest('.catalog-preview-item').remove();
+        }
+    });
+
+    // Configuration pour l'image de fond
+    const coverDropZone = $('#cover-drop-zone');
+    const coverPreview = $('#cover-preview');
+    const coverInput = $('#id_cover_image');
+
+    coverDropZone.on('dragover', function(e) {
+        e.preventDefault();
+        $(this).addClass('dragover');
+    });
+
+    coverDropZone.on('dragleave', function(e) {
+        e.preventDefault();
+        $(this).removeClass('dragover');
+    });
+
+    coverDropZone.on('drop', function(e) {
+        e.preventDefault();
+        $(this).removeClass('dragover');
+        
+        const files = e.originalEvent.dataTransfer.files;
+        if (files.length > 0) {
+            handleCoverImage(files[0]);
+        }
+    });
+
+    coverDropZone.on('click', function() {
+        coverInput.click();
+    });
+
+    coverInput.on('change', function() {
+        if (this.files.length > 0) {
+            handleCoverImage(this.files[0]);
+        }
+    });
+
+    function handleCoverImage(file) {
+        if (!file.type.match('image.*')) {
+            showError('Veuillez sélectionner une image valide');
+            return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const img = $('<img>')
+                .attr('src', e.target.result)
+                .addClass('img-fluid rounded')
+                .css('max-height', '200px');
+
+            const removeBtn = $('<button>')
+                .addClass('btn btn-sm btn-danger position-absolute top-0 end-0')
+                .html('<i class="fas fa-times"></i>')
+                .on('click', function() {
+                    $(this).parent().remove();
+                    coverInput.val('');
+                });
+
+            const previewItem = $('<div>')
+                .addClass('position-relative cover-preview-item')
+                .append(img)
+                .append(removeBtn);
+
+            coverPreview.html(previewItem);
+        };
+        reader.readAsDataURL(file);
+    }
+});
+</script>
+{% endblock %} 

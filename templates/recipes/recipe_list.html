@@ -1,0 +1,341 @@
+{% extends "base.html" %}
+{% load crispy_forms_tags %}
+{% load static %}
+{% load recipe_extras %}
+
+{% block title %}Toutes les recettes{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/recipe_list.css' %}">
+<style>
+.recipe-card {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    border: none;
+    border-radius: 15px;
+    overflow: hidden;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+
+.recipe-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 15px rgba(0,0,0,0.2);
+}
+
+.recipe-main-image {
+    height: 250px;
+    object-fit: cover;
+    transition: transform 0.3s ease;
+}
+
+.recipe-card:hover .recipe-main-image {
+    transform: scale(1.05);
+}
+
+.recipe-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(to bottom, rgba(0,0,0,0.2), rgba(0,0,0,0.6));
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    display: flex;
+    align-items: flex-end;
+    padding: 1rem;
+}
+
+.recipe-card:hover .recipe-overlay {
+    opacity: 1;
+}
+
+.recipe-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    color: #2c3e50;
+}
+
+.recipe-meta {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 0.5rem;
+    color: #6c757d;
+    font-size: 0.9rem;
+}
+
+.recipe-meta i {
+    margin-right: 0.25rem;
+}
+
+.recipe-description {
+    color: #6c757d;
+    font-size: 0.95rem;
+    line-height: 1.5;
+    margin-bottom: 1rem;
+}
+
+.recipe-actions {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 1rem;
+}
+
+.recipe-actions .btn {
+    flex: 1;
+    border-radius: 8px;
+    padding: 0.5rem 1rem;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.recipe-actions .btn-primary {
+    background-color: #3498db;
+    border-color: #3498db;
+}
+
+.recipe-actions .btn-primary:hover {
+    background-color: #2980b9;
+    border-color: #2980b9;
+    transform: translateY(-2px);
+}
+
+.recipe-gallery {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+    gap: 10px;
+    padding: 15px;
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    margin-top: 10px;
+}
+
+.gallery-item {
+    position: relative;
+    aspect-ratio: 1;
+    border-radius: 8px;
+    overflow: hidden;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border: 2px solid transparent;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.gallery-item img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.3s ease;
+}
+
+.gallery-item:hover img {
+    transform: scale(1.1);
+}
+
+.gallery-item.active {
+    border-color: #3498db;
+    box-shadow: 0 0 10px rgba(52, 152, 219, 0.5);
+}
+
+/* Filtres et recherche */
+.search-filters {
+    background-color: #f8f9fa;
+    padding: 1.5rem;
+    border-radius: 15px;
+    margin-bottom: 2rem;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.search-filters h4 {
+    color: #2c3e50;
+    margin-bottom: 1rem;
+    font-weight: 600;
+}
+
+.form-control {
+    border-radius: 8px;
+    border: 1px solid #dee2e6;
+    padding: 0.75rem 1rem;
+}
+
+.form-control:focus {
+    border-color: #3498db;
+    box-shadow: 0 0 0 0.2rem rgba(52, 152, 219, 0.25);
+}
+
+.btn-filter {
+    background-color: #3498db;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 0.75rem 1.5rem;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.btn-filter:hover {
+    background-color: #2980b9;
+    transform: translateY(-2px);
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <!-- Filtres et recherche -->
+    <div class="search-filters mb-4">
+        <form method="get" class="row g-3">
+            <div class="col-md-3">
+                <input type="text" name="query" class="form-control" placeholder="Rechercher une recette..." value="{{ request.GET.query }}">
+            </div>
+            <div class="col-md-3">
+                <select name="category" class="form-control">
+                    <option value="">Toutes les catégories</option>
+                    {% for category in categories %}
+                        <option value="{{ category.id }}" {% if request.GET.category == category.id|stringformat:"i" %}selected{% endif %}>
+                            {{ category.name }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <select name="difficulty" class="form-control">
+                    <option value="">Tous les niveaux</option>
+                    <option value="easy" {% if request.GET.difficulty == 'easy' %}selected{% endif %}>Facile</option>
+                    <option value="medium" {% if request.GET.difficulty == 'medium' %}selected{% endif %}>Moyen</option>
+                    <option value="hard" {% if request.GET.difficulty == 'hard' %}selected{% endif %}>Difficile</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <input type="number" name="preparation_time" class="form-control" placeholder="Temps max (min)" value="{{ request.GET.preparation_time }}">
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-primary w-100">
+                    <i class="fas fa-search"></i> Rechercher
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Liste des recettes -->
+    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+        {% for recipe in recipes %}
+            <div class="col">
+                <div class="recipe-card card h-100">
+                    <div class="position-relative">
+                        {% if recipe.images.exists %}
+                            <img src="{{ recipe.images.first.image.url }}" 
+                                         class="recipe-main-image" 
+                                 alt="{{ recipe.title }}">
+                        {% else %}
+                        <img src="{% static 'images/default-recipe.jpg' %}" 
+                             class="recipe-main-image" 
+                                 alt="Image par défaut">
+                        {% endif %}
+                        <div class="recipe-overlay">
+                            <div class="text-white">
+                                <div class="recipe-meta">
+                                    <span><i class="fas fa-clock"></i> {{ recipe.preparation_time }} min</span>
+                                    <span><i class="fas fa-signal"></i> {{ recipe.get_difficulty_display }}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <h5 class="recipe-title">{{ recipe.title }}</h5>
+                        <p class="recipe-description">{{ recipe.description|truncatewords:20 }}</p>
+                        
+                        {% if recipe.images.exists %}
+                            <div class="recipe-gallery">
+                                {% for img in recipe.images.all %}
+                                    <div class="gallery-item">
+                                        <img src="{{ img.image.url }}" alt="miniature">
+                            </div>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    <div class="card-footer bg-white border-top-0">
+                        <div class="recipe-actions">
+                            <a href="{% url 'recipes:recipe_detail' pk=recipe.pk %}" class="btn btn-primary">
+                                <i class="fas fa-eye"></i> Voir la recette
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% empty %}
+            <div class="col-12">
+                <div class="alert alert-info text-center">
+                    <i class="fas fa-info-circle"></i> Aucune recette trouvée.
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+
+    <!-- Pagination -->
+    {% if is_paginated %}
+        <nav class="mt-4">
+            <ul class="pagination justify-content-center">
+                {% if page_obj.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page=1{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.category %}&category={{ request.GET.category }}{% endif %}{% if request.GET.difficulty %}&difficulty={{ request.GET.difficulty }}{% endif %}">
+                            <i class="fas fa-angle-double-left"></i>
+                        </a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.category %}&category={{ request.GET.category }}{% endif %}{% if request.GET.difficulty %}&difficulty={{ request.GET.difficulty }}{% endif %}">
+                            <i class="fas fa-angle-left"></i>
+                        </a>
+                    </li>
+                {% endif %}
+
+                {% for num in page_obj.paginator.page_range %}
+                    {% if page_obj.number == num %}
+                        <li class="page-item active">
+                            <span class="page-link">{{ num }}</span>
+                        </li>
+                    {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ num }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.category %}&category={{ request.GET.category }}{% endif %}{% if request.GET.difficulty %}&difficulty={{ request.GET.difficulty }}{% endif %}">
+                                {{ num }}
+                            </a>
+                    </li>
+                    {% endif %}
+                {% endfor %}
+
+                {% if page_obj.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.category %}&category={{ request.GET.category }}{% endif %}{% if request.GET.difficulty %}&difficulty={{ request.GET.difficulty }}{% endif %}">
+                            <i class="fas fa-angle-right"></i>
+                        </a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.category %}&category={{ request.GET.category }}{% endif %}{% if request.GET.difficulty %}&difficulty={{ request.GET.difficulty }}{% endif %}">
+                            <i class="fas fa-angle-double-right"></i>
+                        </a>
+                    </li>
+                {% endif %}
+            </ul>
+        </nav>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Gestion de la galerie d'images
+    const galleryItems = document.querySelectorAll('.gallery-item');
+    galleryItems.forEach(item => {
+        item.addEventListener('click', function() {
+            const img = this.querySelector('img');
+            const mainImage = this.closest('.recipe-card').querySelector('.recipe-main-image');
+            if (mainImage && img) {
+                mainImage.src = img.src;
+            }
+        });
+    });
+});
+</script>
+{% endblock %} 

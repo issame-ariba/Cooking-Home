@@ -1,0 +1,941 @@
+{% extends "base.html" %}
+{% load static %}
+{% load recipe_extras %}
+{% load crispy_forms_tags %}
+
+{% block title %}{{ recipe.title }}{% endblock %}
+
+{% block extra_css %}
+<style>
+/* Variables CSS */
+:root {
+    --primary-color: #4a90e2;
+    --secondary-color: #2c3e50;
+    --accent-color: #e74c3c;
+    --text-color: #333;
+    --light-bg: #f8f9fa;
+    --border-radius: 12px;
+    --transition: all 0.3s ease;
+    --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    --shadow-hover: 0 8px 15px rgba(0, 0, 0, 0.2);
+}
+
+.recipe-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem;
+}
+
+.recipe-header {
+    position: relative;
+    padding: 8rem 0;
+    margin-bottom: 3rem;
+    border-radius: var(--border-radius);
+    overflow: hidden;
+    min-height: 400px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: var(--secondary-color);
+}
+
+.recipe-header::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.6);
+    z-index: 1;
+}
+
+.recipe-header-content {
+    position: relative;
+    z-index: 2;
+    text-align: center;
+    color: white;
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 0 2rem;
+}
+
+.recipe-header h1 {
+    font-size: 3.5rem;
+    font-weight: 800;
+    margin-bottom: 1.5rem;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+}
+
+.recipe-meta {
+    display: flex;
+    justify-content: center;
+    gap: 2rem;
+    margin-top: 1.5rem;
+    background: rgba(0, 0, 0, 0.3);
+    padding: 1rem;
+    border-radius: var(--border-radius);
+}
+
+.recipe-meta-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 1.2rem;
+    color: white;
+}
+
+.recipe-meta-item i {
+    font-size: 1.4rem;
+    color: var(--primary-color);
+}
+
+.recipe-content {
+    display: grid;
+    grid-template-columns: 1fr 350px;
+    gap: 3rem;
+}
+
+.recipe-main {
+    background: white;
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow);
+    padding: 2rem;
+}
+
+.recipe-sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+}
+
+.recipe-section {
+    background: white;
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow);
+    padding: 2rem;
+}
+
+.section-title {
+    font-size: 1.8rem;
+    color: var(--secondary-color);
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 2px solid var(--light-bg);
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.section-title i {
+    color: var(--primary-color);
+}
+
+/* Style pour les ingrédients */
+.ingredients-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.ingredient-item {
+    display: flex;
+    align-items: center;
+    padding: 1rem;
+    background: var(--light-bg);
+    border-radius: var(--border-radius);
+    margin-bottom: 0.75rem;
+    transition: var(--transition);
+}
+
+.ingredient-item:hover {
+    transform: translateX(10px);
+    box-shadow: var(--shadow);
+}
+
+.ingredient-item i {
+    color: var(--primary-color);
+    margin-right: 1rem;
+    font-size: 1.2rem;
+}
+
+.ingredient-name {
+    flex: 1;
+    font-weight: 500;
+}
+
+.ingredient-quantity {
+    color: var(--secondary-color);
+    font-weight: 600;
+    margin-left: 1rem;
+}
+
+/* Style pour les instructions */
+.instructions-content {
+    background: var(--light-bg);
+    border-radius: var(--border-radius);
+    padding: 2rem;
+}
+
+.instruction-step {
+    display: flex;
+    align-items: flex-start;
+    gap: 1.5rem;
+    background: white;
+    border-radius: var(--border-radius);
+    padding: 1.5rem;
+    margin-bottom: 1rem;
+    box-shadow: var(--shadow);
+    transition: var(--transition);
+}
+
+.instruction-step:hover {
+    transform: translateX(10px);
+    box-shadow: var(--shadow-hover);
+}
+
+.step-number {
+    flex-shrink: 0;
+    width: 2.5rem;
+    height: 2.5rem;
+    background: var(--primary-color);
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 1.2rem;
+}
+
+.step-content {
+    flex: 1;
+    line-height: 1.6;
+    font-size: 1.1rem;
+}
+
+/* Style pour les informations supplémentaires */
+.recipe-info {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.info-item {
+    background: var(--light-bg);
+    padding: 1rem;
+    border-radius: var(--border-radius);
+    text-align: center;
+}
+
+.info-item i {
+    font-size: 1.5rem;
+    color: var(--primary-color);
+    margin-bottom: 0.5rem;
+}
+
+.info-item .label {
+    font-size: 0.9rem;
+    color: #666;
+    margin-bottom: 0.25rem;
+}
+
+.info-item .value {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: var(--secondary-color);
+}
+
+/* Responsive */
+@media (max-width: 992px) {
+    .recipe-content {
+        grid-template-columns: 1fr;
+    }
+    
+    .recipe-header h1 {
+        font-size: 2.5rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .recipe-meta {
+        flex-direction: column;
+        gap: 1rem;
+    }
+    
+    .recipe-header h1 {
+        font-size: 2rem;
+    }
+    
+    .section-title {
+        font-size: 1.5rem;
+    }
+}
+
+/* Style pour les ingrédients et instructions */
+.ingredients-content,
+.instructions-content {
+    background: var(--light-bg);
+    border-radius: var(--border-radius);
+    padding: 2rem;
+    line-height: 1.8;
+}
+
+.ingredients-content p,
+.instructions-content p {
+    margin-bottom: 1rem;
+    padding: 1rem;
+    background: white;
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow);
+    transition: var(--transition);
+}
+
+.ingredients-content p:hover,
+.instructions-content p:hover {
+    transform: translateX(10px);
+    box-shadow: var(--shadow-hover);
+}
+
+.instructions-content p {
+    position: relative;
+    padding-left: 3rem;
+}
+
+.instructions-content p::before {
+    content: attr(data-step);
+    position: absolute;
+    left: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 2rem;
+    height: 2rem;
+    background: var(--primary-color);
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 1.1rem;
+}
+
+/* Style pour la galerie de photos */
+.recipe-gallery {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.gallery-item {
+    position: relative;
+    border-radius: var(--border-radius);
+    overflow: hidden;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.gallery-item:hover {
+    transform: scale(1.05);
+    box-shadow: var(--shadow-hover);
+}
+
+.gallery-image {
+    width: 100%;
+    height: 200px;
+    object-fit: cover;
+    transition: var(--transition);
+}
+
+/* Style pour la modal de visualisation */
+.image-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.9);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+}
+
+.image-modal.show {
+    opacity: 1;
+    visibility: visible;
+}
+
+.modal-content {
+    max-width: 90%;
+    max-height: 90vh;
+    object-fit: contain;
+    border-radius: var(--border-radius);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.modal-close {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    color: white;
+    font-size: 2rem;
+    cursor: pointer;
+    z-index: 1001;
+}
+
+.modal-nav {
+    position: absolute;
+    top: 50%;
+    left: 0;
+    right: 0;
+    transform: translateY(-50%);
+    display: flex;
+    justify-content: space-between;
+    padding: 0 2rem;
+    z-index: 1001;
+}
+
+.modal-nav button {
+    background: rgba(255, 255, 255, 0.2);
+    border: none;
+    color: white;
+    font-size: 2rem;
+    padding: 1rem;
+    cursor: pointer;
+    border-radius: 50%;
+    transition: var(--transition);
+}
+
+.modal-nav button:hover {
+    background: rgba(255, 255, 255, 0.3);
+}
+
+.loading-spinner {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 50px;
+    height: 50px;
+    border: 5px solid #f3f3f3;
+    border-top: 5px solid var(--primary-color);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: translate(-50%, -50%) rotate(0deg); }
+    100% { transform: translate(-50%, -50%) rotate(360deg); }
+}
+
+.nav-indicators {
+    position: absolute;
+    bottom: 1rem;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 0.5rem;
+    z-index: 1001;
+}
+
+.nav-indicator {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.3);
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.nav-indicator.active {
+    background: white;
+}
+
+/* Styles pour les commentaires */
+.comments-section {
+    margin-top: 3rem;
+    padding-top: 2rem;
+    border-top: 1px solid #dee2e6;
+}
+
+.comment {
+    background: #f8f9fa;
+    border-radius: 8px;
+    padding: 1rem;
+    margin-bottom: 1rem;
+}
+
+.comment-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5rem;
+}
+
+.comment-author {
+    font-weight: bold;
+    color: #2c3e50;
+}
+
+.comment-date {
+    color: #6c757d;
+    font-size: 0.9rem;
+}
+
+.comment-content {
+    color: #495057;
+}
+
+/* Styles pour la notation */
+.rating-section {
+    margin: 2rem 0;
+    text-align: center;
+}
+
+.rating-stars {
+    font-size: 2rem;
+    color: #ffc107;
+    cursor: pointer;
+}
+
+.rating-stars .fas {
+    margin: 0 0.2rem;
+}
+
+.rating-stars .far {
+    margin: 0 0.2rem;
+}
+
+.rating-stars .fas:hover,
+.rating-stars .far:hover {
+    transform: scale(1.2);
+    transition: transform 0.2s ease;
+}
+
+.rating-average {
+    font-size: 1.2rem;
+    color: #6c757d;
+    margin-top: 0.5rem;
+}
+
+.rating-count {
+    font-size: 0.9rem;
+    color: #6c757d;
+}
+
+/* Style pour le formulaire de commentaire */
+.comment-form {
+    background: #fff;
+    padding: 1.5rem;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    margin-top: 2rem;
+}
+
+.comment-form textarea {
+    resize: vertical;
+    min-height: 100px;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="recipe-container">
+    <div class="recipe-header" {% if recipe.cover_image %}style="background: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)), url('{{ recipe.cover_image.url }}') center center/cover no-repeat;"{% endif %}>
+        <div class="recipe-header-content">
+            <h1>{{ recipe.title }}</h1>
+            <div class="recipe-meta">
+                <div class="recipe-meta-item">
+                    <i class="fas fa-clock"></i>
+                    <span>{{ recipe.cooking_time }} min</span>
+                </div>
+                <div class="recipe-meta-item">
+                    <i class="fas fa-fire"></i>
+                    <span>{{ recipe.difficulty }}</span>
+                </div>
+                <div class="recipe-meta-item">
+                    <i class="fas fa-user"></i>
+                    <span>{{ recipe.author.get_full_name }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="recipe-content">
+        <div class="recipe-main">
+            <!-- Galerie de photos -->
+            {% if recipe.images.exists %}
+            <div class="recipe-section">
+                <h2 class="section-title">
+                    <i class="fas fa-images"></i>
+                    Photos de la recette
+                </h2>
+                <div class="recipe-gallery">
+                    {% for image in recipe.images.all %}
+                        {% if not recipe.cover_image or image.image.url != recipe.cover_image.url %}
+                        <div class="gallery-item">
+                            <img src="{{ image.image.url }}" alt="{{ recipe.title }}" class="gallery-image" onclick="showFullImage(this)">
+                        </div>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
+            <div class="recipe-info">
+                <div class="info-item">
+                    <i class="fas fa-utensils"></i>
+                    <div class="label">Portions</div>
+                    <div class="value">{{ recipe.servings }}</div>
+                </div>
+                <div class="info-item">
+                    <i class="fas fa-clock"></i>
+                    <div class="label">Temps de préparation</div>
+                    <div class="value">{{ recipe.preparation_time }} min</div>
+                </div>
+                <div class="info-item">
+                    <i class="fas fa-fire"></i>
+                    <div class="label">Temps de cuisson</div>
+                    <div class="value">{{ recipe.cooking_time }} min</div>
+                </div>
+                <div class="info-item">
+                    <i class="fas fa-chart-line"></i>
+                    <div class="label">Difficulté</div>
+                    <div class="value">{{ recipe.difficulty }}</div>
+                </div>
+            </div>
+
+            <div class="recipe-section">
+                <h2 class="section-title">
+                    <i class="fas fa-list"></i>
+                    Ingrédients
+                </h2>
+                <div class="ingredients-content">
+                    {{ recipe.ingredients|linebreaks }}
+                </div>
+            </div>
+
+            <div class="recipe-section">
+                <h2 class="section-title">
+                    <i class="fas fa-tasks"></i>
+                    Instructions
+                </h2>
+                <div class="instructions-content">
+                    {% for instruction in recipe.get_instructions_list %}
+                        <div class="instruction-step">
+                            <div class="step-number">{{ forloop.counter }}</div>
+                            <div class="step-content">{{ instruction }}</div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <div class="recipe-sidebar">
+            <div class="recipe-section">
+                <h2 class="section-title">
+                    <i class="fas fa-info-circle"></i>
+                    Informations
+                </h2>
+                <div class="recipe-description">
+                    {{ recipe.description|linebreaks }}
+                </div>
+            </div>
+
+            {% if recipe.categories.all %}
+            <div class="recipe-section">
+                <h2 class="section-title">
+                    <i class="fas fa-tags"></i>
+                    Catégories
+                </h2>
+                <div class="categories-list">
+                    {% for category in recipe.categories.all %}
+                    <a href="{% url 'recipes:category_detail' category.slug %}" class="btn btn-outline-primary mb-2">
+                        {{ category.name }}
+                    </a>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Section de notation -->
+    <div class="rating-section">
+        <h3 class="mb-4">Notez cette recette</h3>
+        <div class="rating-stars" data-recipe-id="{{ recipe.id }}">
+            {% for i in "12345" %}
+                <i class="{% if user_rating and user_rating.value >= forloop.counter %}fas{% else %}far{% endif %} fa-star" 
+                   data-rating="{{ forloop.counter }}"></i>
+            {% endfor %}
+        </div>
+        <div class="rating-average">
+            Note moyenne : <span id="average-rating">{{ recipe.ratings.all|average_rating|default:"0" }}</span>/5
+        </div>
+        <div class="rating-count">
+            ({{ recipe.ratings.count }} avis)
+        </div>
+    </div>
+
+    <!-- Section des commentaires -->
+    <div class="comments-section">
+        <h3 class="mb-4">Commentaires</h3>
+        
+        <!-- Formulaire de commentaire -->
+        {% if user.is_authenticated %}
+        <div class="comment-form">
+            <form method="post" action="{% url 'recipes:recipe_comment' recipe.id %}">
+                {% csrf_token %}
+                {{ comment_form|crispy }}
+                <button type="submit" class="btn btn-primary mt-3">
+                    <i class="fas fa-paper-plane"></i> Publier le commentaire
+                </button>
+            </form>
+        </div>
+        {% else %}
+        <div class="alert alert-info">
+            <i class="fas fa-info-circle"></i> 
+            <a href="{% url 'login' %}?next={{ request.path }}">Connectez-vous</a> pour laisser un commentaire.
+        </div>
+        {% endif %}
+
+        <!-- Liste des commentaires -->
+        <div class="comments-list mt-4">
+            {% for comment in comments %}
+            <div class="comment">
+                <div class="comment-header">
+                    <div class="comment-author">
+                        <i class="fas fa-user-circle"></i> {{ comment.user.get_full_name|default:comment.user.username }}
+                    </div>
+                    <div class="comment-date">
+                        <i class="fas fa-clock"></i> {{ comment.created_at|date:"d/m/Y H:i" }}
+                    </div>
+                </div>
+                <div class="comment-content">
+                    {{ comment.content|linebreaks }}
+                </div>
+            </div>
+            {% empty %}
+            <div class="alert alert-info">
+                <i class="fas fa-info-circle"></i> Aucun commentaire pour le moment. Soyez le premier à commenter !
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let currentImageIndex = 0;
+let currentGallery = null;
+
+function showFullImage(img) {
+    const modal = document.createElement('div');
+    modal.className = 'image-modal';
+    
+    // Récupérer toutes les images de la galerie
+    const gallery = img.closest('.recipe-gallery');
+    const images = Array.from(gallery.querySelectorAll('img'));
+    currentGallery = gallery;
+    currentImageIndex = images.indexOf(img);
+
+    // Créer les indicateurs de navigation
+    const indicators = images.map((_, index) => `
+        <div class="nav-indicator ${index === currentImageIndex ? 'active' : ''}" 
+             onclick="navigateToImage(${index})"></div>
+    `).join('');
+
+    // Créer le contenu du modal
+    modal.innerHTML = `
+        <div class="loading-spinner"></div>
+        <img class="modal-content" src="${img.src}" onload="hideSpinner(this)">
+        <div class="modal-nav">
+            <button class="prev" onclick="navigateGallery(-1)">❮</button>
+            <button class="next" onclick="navigateGallery(1)">❯</button>
+        </div>
+        <div class="nav-indicators">
+            ${indicators}
+        </div>
+        <span class="modal-close" onclick="closeModal(this)">&times;</span>
+    `;
+    
+    document.body.appendChild(modal);
+    requestAnimationFrame(() => {
+        modal.classList.add('show');
+    });
+
+    // Empêcher le défilement de la page
+    document.body.style.overflow = 'hidden';
+}
+
+function navigateToImage(index) {
+    const images = Array.from(currentGallery.querySelectorAll('img'));
+    currentImageIndex = index;
+    updateModalImage(images[index]);
+    updateIndicators();
+}
+
+function updateIndicators() {
+    const indicators = document.querySelectorAll('.nav-indicator');
+    indicators.forEach((indicator, index) => {
+        indicator.classList.toggle('active', index === currentImageIndex);
+    });
+}
+
+function updateModalImage(newImage) {
+    const modal = document.querySelector('.image-modal');
+    const modalImg = modal.querySelector('.modal-content');
+    const spinner = modal.querySelector('.loading-spinner');
+    
+    spinner.style.display = 'block';
+    modalImg.style.opacity = '0';
+    
+    setTimeout(() => {
+        modalImg.src = newImage.src;
+    }, 300);
+}
+
+function navigateGallery(direction) {
+    const images = Array.from(currentGallery.querySelectorAll('img'));
+    currentImageIndex = (currentImageIndex + direction + images.length) % images.length;
+    updateModalImage(images[currentImageIndex]);
+    updateIndicators();
+}
+
+function hideSpinner(img) {
+    const spinner = img.parentElement.querySelector('.loading-spinner');
+    if (spinner) {
+        spinner.style.display = 'none';
+    }
+    img.style.opacity = '1';
+}
+
+function closeModal(element) {
+    const modal = element.closest('.image-modal');
+    modal.classList.remove('show');
+    setTimeout(() => {
+        modal.remove();
+        document.body.style.overflow = ''; // Réactiver le défilement
+    }, 300);
+}
+
+// Navigation au clavier
+document.addEventListener('keydown', function(event) {
+    const modal = document.querySelector('.image-modal');
+    if (!modal) return;
+    
+    switch(event.key) {
+        case 'Escape':
+            closeModal(modal.querySelector('.modal-close'));
+            break;
+        case 'ArrowLeft':
+            navigateGallery(-1);
+            break;
+        case 'ArrowRight':
+            navigateGallery(1);
+            break;
+    }
+});
+
+// Fermer la modal en cliquant en dehors de l'image
+document.addEventListener('click', function(event) {
+    const modal = document.querySelector('.image-modal');
+    if (modal && event.target === modal) {
+        closeModal(modal.querySelector('.modal-close'));
+    }
+});
+
+function shareRecipe() {
+    if (navigator.share) {
+        navigator.share({
+            title: '{{ recipe.title }}',
+            text: 'Découvrez cette délicieuse recette : {{ recipe.title }}',
+            url: window.location.href
+        })
+        .catch(error => console.log('Erreur de partage:', error));
+    } else {
+        // Fallback pour les navigateurs qui ne supportent pas l'API Web Share
+        const dummy = document.createElement('input');
+        document.body.appendChild(dummy);
+        dummy.value = window.location.href;
+        dummy.select();
+        document.execCommand('copy');
+        document.body.removeChild(dummy);
+        alert('Lien copié dans le presse-papiers !');
+    }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    // Numéroter les instructions
+    const instructions = document.querySelectorAll('.instructions-content p');
+    instructions.forEach((instruction, index) => {
+        instruction.setAttribute('data-step', index + 1);
+    });
+});
+
+$(document).ready(function() {
+    // Gestion de la notation en étoiles
+    $('.rating-stars .fa-star').hover(
+        function() {
+            const rating = $(this).data('rating');
+            $('.rating-stars .fa-star').each(function(index) {
+                if (index < rating) {
+                    $(this).removeClass('far').addClass('fas');
+                } else {
+                    $(this).removeClass('fas').addClass('far');
+                }
+            });
+        },
+        function() {
+            const currentRating = $('.rating-stars').data('current-rating') || 0;
+            $('.rating-stars .fa-star').each(function(index) {
+                if (index < currentRating) {
+                    $(this).removeClass('far').addClass('fas');
+                } else {
+                    $(this).removeClass('fas').addClass('far');
+                }
+            });
+        }
+    );
+
+    $('.rating-stars .fa-star').click(function() {
+        const rating = $(this).data('rating');
+        const recipeId = $('.rating-stars').data('recipe-id');
+
+        $.ajax({
+            url: "{% url 'recipes:recipe_rate' recipe.id %}",
+            method: 'POST',
+            data: {
+                'value': rating,
+                'csrfmiddlewaretoken': '{{ csrf_token }}'
+            },
+            success: function(response) {
+                if (response.success) {
+                    $('.rating-stars').data('current-rating', rating);
+                    $('#average-rating').text(response.avg_rating);
+                    // Mettre à jour l'affichage des étoiles
+                    $('.rating-stars .fa-star').each(function(index) {
+                        if (index < rating) {
+                            $(this).removeClass('far').addClass('fas');
+                        } else {
+                            $(this).removeClass('fas').addClass('far');
+                        }
+                    });
+                }
+            },
+            error: function() {
+                alert('Une erreur est survenue lors de la notation. Veuillez réessayer.');
+            }
+        });
+    });
+});
+</script>
+{% endblock %} 
