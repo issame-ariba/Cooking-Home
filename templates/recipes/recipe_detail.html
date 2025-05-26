@@ -543,6 +543,97 @@
     resize: vertical;
     min-height: 100px;
 }
+
+/* Styles pour les commentaires et notes */
+.rating-summary {
+    background: var(--light-bg);
+    padding: 1rem;
+    border-radius: var(--border-radius);
+}
+
+.average-rating {
+    font-size: 2rem;
+    font-weight: bold;
+    color: var(--secondary-color);
+}
+
+.rating-max {
+    font-size: 1rem;
+    color: #666;
+}
+
+.rating-stars {
+    margin: 0 1rem;
+}
+
+.rating-count {
+    color: #666;
+}
+
+.rating-stars-input {
+    display: flex;
+    flex-direction: row-reverse;
+    justify-content: flex-end;
+}
+
+.rating-stars-input input {
+    display: none;
+}
+
+.rating-stars-input label {
+    cursor: pointer;
+    font-size: 1.5rem;
+    color: #ddd;
+    padding: 0 0.1rem;
+}
+
+.rating-stars-input label:hover,
+.rating-stars-input label:hover ~ label,
+.rating-stars-input input:checked ~ label {
+    color: #ffc107;
+}
+
+.comment-item {
+    background: var(--light-bg);
+    border-radius: var(--border-radius);
+    padding: 1rem;
+    margin-bottom: 1rem;
+}
+
+.comment-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5rem;
+}
+
+.comment-user {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.comment-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+.comment-username {
+    font-weight: 500;
+    color: var(--secondary-color);
+}
+
+.comment-date {
+    color: #666;
+    font-size: 0.9rem;
+}
+
+.comment-content {
+    line-height: 1.5;
+    color: var(--text-color);
+}
 </style>
 {% endblock %}
 
@@ -564,6 +655,14 @@
                     <i class="fas fa-user"></i>
                     <span>{{ recipe.author.get_full_name }}</span>
                 </div>
+                {% if user.is_authenticated %}
+                <div class="recipe-meta-item">
+                    <button id="favorite-button" class="btn btn-link text-white" onclick="toggleFavorite()">
+                        <i class="fas fa-heart {% if user in recipe.favorites.all %}text-danger{% endif %}"></i>
+                        <span id="favorite-text">{% if user in recipe.favorites.all %}Retirer des favoris{% else %}Ajouter aux favoris{% endif %}</span>
+                    </button>
+                </div>
+                {% endif %}
             </div>
         </div>
     </div>
@@ -667,67 +766,89 @@
         </div>
     </div>
 
-    <!-- Section de notation -->
-    <div class="rating-section">
-        <h3 class="mb-4">Notez cette recette</h3>
-        <div class="rating-stars" data-recipe-id="{{ recipe.id }}">
-            {% for i in "12345" %}
-                <i class="{% if user_rating and user_rating.value >= forloop.counter %}fas{% else %}far{% endif %} fa-star" 
-                   data-rating="{{ forloop.counter }}"></i>
-            {% endfor %}
-        </div>
-        <div class="rating-average">
-            Note moyenne : <span id="average-rating">{{ recipe.ratings.all|average_rating|default:"0" }}</span>/5
-        </div>
-        <div class="rating-count">
-            ({{ recipe.ratings.count }} avis)
-        </div>
-    </div>
-
-    <!-- Section des commentaires -->
-    <div class="comments-section">
-        <h3 class="mb-4">Commentaires</h3>
+    <!-- Section des commentaires et notes -->
+    <div class="recipe-section">
+        <h3 class="section-title">
+            <i class="fas fa-comments"></i> Commentaires et Notes
+        </h3>
         
-        <!-- Formulaire de commentaire -->
+        <!-- Affichage de la note moyenne -->
+        <div class="rating-summary mb-4">
+            <div class="d-flex align-items-center">
+                <div class="average-rating">
+                    <span class="rating-value">{{ avg_rating }}</span>
+                    <span class="rating-max">/5</span>
+                </div>
+                <div class="rating-stars">
+                    {% for i in "12345" %}
+                        {% if forloop.counter <= avg_rating %}
+                            <i class="fas fa-star text-warning"></i>
+                        {% else %}
+                            <i class="far fa-star text-warning"></i>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+                <span class="rating-count ms-2">({{ ratings.count }} avis)</span>
+            </div>
+        </div>
+
+        <!-- Formulaire de note pour utilisateur connecté -->
         {% if user.is_authenticated %}
-        <div class="comment-form">
-            <form method="post" action="{% url 'recipes:recipe_comment' recipe.id %}">
-                {% csrf_token %}
-                {{ comment_form|crispy }}
-                <button type="submit" class="btn btn-primary mt-3">
-                    <i class="fas fa-paper-plane"></i> Publier le commentaire
-                </button>
-            </form>
-        </div>
-        {% else %}
-        <div class="alert alert-info">
-            <i class="fas fa-info-circle"></i> 
-            <a href="{% url 'login' %}?next={{ request.path }}">Connectez-vous</a> pour laisser un commentaire.
-        </div>
+            <div class="user-rating mb-4">
+                <h4>Votre note</h4>
+                <form method="post" action="{% url 'recipes:recipe_rate' recipe.pk %}" class="rating-form">
+                    {% csrf_token %}
+                    <div class="rating-stars-input">
+                        {% for i in "54321" %}
+                            <input type="radio" name="value" value="{{ i }}" id="star{{ i }}" {% if user_rating.value == i|add:"0" %}checked{% endif %}>
+                            <label for="star{{ i }}"><i class="fas fa-star"></i></label>
+                        {% endfor %}
+                    </div>
+                    <button type="submit" class="btn btn-primary mt-2">Noter</button>
+                </form>
+            </div>
         {% endif %}
 
         <!-- Liste des commentaires -->
-        <div class="comments-list mt-4">
+        <div class="comments-list">
             {% for comment in comments %}
-            <div class="comment">
-                <div class="comment-header">
-                    <div class="comment-author">
-                        <i class="fas fa-user-circle"></i> {{ comment.user.get_full_name|default:comment.user.username }}
+                <div class="comment-item">
+                    <div class="comment-header">
+                        <div class="comment-user">
+                            <img src="{{ comment.user.userprofile.avatar.url|default:'/static/images/default-avatar.png' }}" 
+                                 alt="{{ comment.user.username }}" 
+                                 class="comment-avatar">
+                            <span class="comment-username">{{ comment.user.username }}</span>
+                        </div>
+                        <div class="comment-date">
+                            {{ comment.created_at|date:"d/m/Y H:i" }}
+                        </div>
                     </div>
-                    <div class="comment-date">
-                        <i class="fas fa-clock"></i> {{ comment.created_at|date:"d/m/Y H:i" }}
+                    <div class="comment-content">
+                        {{ comment.content }}
                     </div>
                 </div>
-                <div class="comment-content">
-                    {{ comment.content|linebreaks }}
-                </div>
-            </div>
             {% empty %}
-            <div class="alert alert-info">
-                <i class="fas fa-info-circle"></i> Aucun commentaire pour le moment. Soyez le premier à commenter !
-            </div>
+                <p class="text-muted">Aucun commentaire pour le moment.</p>
             {% endfor %}
         </div>
+
+        <!-- Formulaire de commentaire pour utilisateur connecté -->
+        {% if user.is_authenticated %}
+            <div class="comment-form mt-4">
+                <h4>Ajouter un commentaire</h4>
+                <form method="post" action="{% url 'recipes:recipe_comment' recipe.pk %}">
+                    {% csrf_token %}
+                    {{ comment_form|crispy }}
+                    <button type="submit" class="btn btn-primary mt-2">Publier</button>
+                </form>
+            </div>
+        {% else %}
+            <div class="alert alert-info mt-4">
+                <i class="fas fa-info-circle"></i> 
+                <a href="{% url 'login' %}">Connectez-vous</a> pour laisser un commentaire ou une note.
+            </div>
+        {% endif %}
     </div>
 </div>
 {% endblock %}
@@ -937,5 +1058,33 @@ $(document).ready(function() {
         });
     });
 });
+
+function toggleFavorite() {
+    $.ajax({
+        url: "{% url 'recipes:toggle_favorite' recipe.pk %}",
+        method: 'POST',
+        data: {
+            'csrfmiddlewaretoken': '{{ csrf_token }}'
+        },
+        success: function(response) {
+            if (response.success) {
+                const favoriteButton = $('#favorite-button');
+                const favoriteIcon = favoriteButton.find('i');
+                const favoriteText = $('#favorite-text');
+                
+                if (response.is_favorite) {
+                    favoriteIcon.addClass('text-danger');
+                    favoriteText.text('Retirer des favoris');
+                } else {
+                    favoriteIcon.removeClass('text-danger');
+                    favoriteText.text('Ajouter aux favoris');
+                }
+            }
+        },
+        error: function() {
+            alert('Une erreur est survenue. Veuillez réessayer.');
+        }
+    });
+}
 </script>
 {% endblock %} 

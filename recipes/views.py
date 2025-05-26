@@ -47,11 +47,19 @@ def recipe_list(request):
 
 def recipe_detail(request, pk):
     recipe = get_object_or_404(Recipe, pk=pk)
+    
+    # Récupérer la note de l'utilisateur connecté s'il est authentifié
     user_rating = None
     if request.user.is_authenticated:
         user_rating = recipe.ratings.filter(user=request.user).first()
     
+    # Récupérer tous les commentaires et les notes
     comments = recipe.comments.all().order_by('-created_at')
+    ratings = recipe.ratings.all()
+    
+    # Calculer la moyenne des notes
+    avg_rating = recipe.ratings.aggregate(Avg('value'))['value__avg'] or 0
+    
     comment_form = RecipeCommentForm()
     
     # Formater les ingrédients et les instructions
@@ -62,6 +70,8 @@ def recipe_detail(request, pk):
         'recipe': recipe,
         'user_rating': user_rating,
         'comments': comments,
+        'ratings': ratings,
+        'avg_rating': round(avg_rating, 1),
         'comment_form': comment_form,
         'ingredients_list': ingredients_list,
         'instructions_list': instructions_list
